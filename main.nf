@@ -105,6 +105,6 @@ process QUERY {
 
     script:
     """
-    prb query_BL -s ${params.greedy} -L {param.length} -m {placeholder} -c ${params.countRepeat} -t ${params.threads}
+    prb query_BL -s ${params.greedy} -L {params.length} -m {placeholder} -c ${params.countRepeat} -t ${params.threads}
     """
 }
