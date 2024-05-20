@@ -30,6 +30,14 @@ log.info """\
     Mismatch: ${params.mismatch}
     Threads: ${params.threads}
     Combsize: ${params.combsize}
+    Count repeat: ${params.countRepeat}
+    Function DB: ${params.funcDB}
+    Match consecutive: ${params.matchConsec}
+    Max consecutive polymer: ${params.maxConsecPolymer}
+    Distance: ${params.distance}
+    Temperature melting: ${params.tempMelting}
+    Greedy: ${params.greedy}
+    Gap: ${params.gap}
 
 """.stripIndent()
 
