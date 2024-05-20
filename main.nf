@@ -16,6 +16,7 @@ params.maxConsecPolymer = 6
 params.distance = 8
 params.tempMelting = 72
 params.greedy = "-greedy"
+params.gap = 500
 
 log.info """\
     F I S H   N E X T F L O W
@@ -33,17 +34,26 @@ log.info """\
 """.stripIndent()
 
 process MKDIRS {
-    label "step 0: Create directories"
+    label "step 1: Create directories"
 
     script:
     """
-    prb makedirs --genome ${params.genome} --regions ${params.regions}
+    prb makedirs
     """
 
 }
 
+process GET_REFERENCE {
+    label "step 2: Get reference"
+    //TODO! add the reference genome to the command
+    script:
+    """
+    prb get_reference ${params.genome}
+    """
+}
+
 process GET_OLIGOS {
-    label "step 1: Get oligos"
+    label "step 3: Get oligos"
 
     script:
     """
@@ -52,7 +62,7 @@ process GET_OLIGOS {
 }
 
 process NHUSH {
-    label "step 3: NHUSH"
+    label "step 4: NHUSH"
 
     script:
     """
@@ -65,7 +75,7 @@ process NHUSH {
 }
 
 process REFORM_HUSH {
-    label "step 4: Reform HUSH"
+    label "step 5: Reform HUSH"
 
     script:
     """
@@ -74,7 +84,7 @@ process REFORM_HUSH {
 }
 
 process MELT_SECS {
-    label "step 5: Melt secondary structures"
+    label "step 6: Melt secondary structures"
 
     script:
     """
@@ -83,7 +93,7 @@ process MELT_SECS {
 }
 
 process GENERATE_BLACKLIST {
-    label "step 6: Generate blacklist"
+    label "step 7: Generate blacklist"
 
     script:
     """
@@ -92,7 +102,7 @@ process GENERATE_BLACKLIST {
 }
 
 process BUILD_DATABASE {
-    label "step 7: Build database"
+    label "step 8: Build database"
 
     script:
     """
@@ -100,11 +110,11 @@ process BUILD_DATABASE {
     """
 }
 
-process QUERY {
-    label "step 8: Cycling Query"
+process CYC_QUERY {
+    label "step 9: Cycling Query"
 
     script:
     """
-    prb query_BL -s ${params.greedy} -L {params.length} -m {placeholder} -c ${params.countRepeat} -t ${params.threads}
+    prb query_BL -s ${params.nt} -L ${params.length} -m ${placeholder} -c ${params.countRepeat} -t ${params.threads} -g ${params.gap} ${params.greedy}
     """
 }
