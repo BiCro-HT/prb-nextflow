@@ -1,0 +1,2 @@
+Window_start	Window_end	window_id	chrom	DNA_start	DNA_end	window	type	ref	length	Gene_start	Gene_end	Gene_strand	Gene_name	Gene_id	design_type
+14034369	14054369	1	chr19	14034369	14054369	1000	targets	Homo_sapiens.GRCh38.dna	40						DNA

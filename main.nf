@@ -1,28 +1,33 @@
 // for highly-repeated sequences alternative bath should be implemented
 
-params.genome = "/path/to/your/genome.fa"
-params.regions = "/path/to/your/all_regions.tsv"
-params.nt = "nucleotide type (DNA or RNA)"
-params.gcfilter = "GC filter (1 or 0)"
-params.length = 40
-params.sublength = ""
-params.mismatch = 1
-params.threads = 40
+// Nextflow script for the FISH pipeline
+params.get_genome = "get_T2T" // get_GRC or get_T2T
+params.genome = "data/genome.fa" // path to the reference genome file
+params.rois = "data/rois/all_regions.tsv" // path to the regions of interest file
+params.nt = "DNA" // DNA or RNA
+params.gcfilter = 1 // 0 for no filter, 1 for filter
+params.length = 40 // length of the oligos MUST be the same with the "data/rois/all_regions.tsv"
+params.sublength = "" 
+params.mismatch = 2 // number of mismatches
+params.threads = 40 // number of threads
 params.combsize = ""
-params.countRepeat = 100
-params.funcDB = "q_bl"
-params.matchConsec = 24
+params.countRepeat = 100 //min abundance to be included in oligo blacklist
+params.funcDB = "q_bl" //only for BUILD_DATABASE process 
+params.matchConsec = 24 //
 params.maxConsecPolymer = 6
 params.distance = 8
 params.tempMelting = 72
-params.greedy = "-greedy"
-params.gap = 500
+params.greedy = "-greedy" // only for CYC_QUERY process 
+params.gap = 500 // only for CYC_QUERY process 
+params.stepdown = 25 // only for CYC_QUERY process 
+params.gappercent = null // only for CYC_QUERY process
 
 log.info """\
     F I S H   N E X T F L O W
     =========================
+    Get genome: ${params.get_genome}
     Genome: ${params.genome}
-    Regions: ${params.regions}
+    Regions of interest: ${params.rois}
     Nucleotide type: ${params.nt}
     GC filter: ${params.gcfilter}
     Length: ${params.length}
@@ -38,6 +43,8 @@ log.info """\
     Temperature melting: ${params.tempMelting}
     Greedy: ${params.greedy}
     Gap: ${params.gap}
+    Stepdown: ${params.stepdown}
+    Gap percent: ${params.gappercent}
 
 """.stripIndent()
 
@@ -49,6 +56,15 @@ process MKDIRS {
     prb makedirs
     """
 
+}
+
+process MV_ROIS {
+    label "step 1A: Move regions of interest"
+
+    script:
+    """
+    cp ${params.rois} data/rois/all_regions.tsv
+    """
 }
 
 process GET_REFERENCE {
@@ -123,6 +139,24 @@ process CYC_QUERY {
 
     script:
     """
-    prb query_BL -s ${params.nt} -L ${params.length} -m ${placeholder} -c ${params.countRepeat} -t ${params.threads} -g ${params.gap} ${params.greedy}
+    prb query_BL -s ${params.nt} -L ${params.length} -m ${placeholder} -c ${params.cutoff} -t ${params.threads} -g ${params.gap} ${params.greedy}
+    """
+}
+
+process SUMMARY {
+    label "step 10: Summarize Probes"
+
+    script:
+    """
+    prb summarize_probes_final
+    """
+}
+
+process SUMMARY_VISUAL {
+    label "step 10: Summarize Probes Visual"
+
+    script:
+    """
+    prb visual_report
     """
 }
