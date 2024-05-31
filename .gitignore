@@ -2,3 +2,5 @@ work/
 .nextflow/
 results*
 .nextflow*
+data
+HUSH

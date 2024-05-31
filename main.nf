@@ -10,17 +10,21 @@ params.length = 40 // length of the oligos MUST be the same with the "data/rois/
 params.sublength = "" 
 params.mismatch = 2 // number of mismatches
 params.threads = 40 // number of threads
-params.combsize = ""
+params.combsize = 14
 params.countRepeat = 100 //min abundance to be included in oligo blacklist
 params.funcDB = "q_bl" //only for BUILD_DATABASE process 
 params.matchConsec = 24 //
 params.maxConsecPolymer = 6
 params.distance = 8
+params.cyc_mm = 8 // mismatch for CYC_QUERY process
 params.tempMelting = 72
 params.greedy = "-greedy" // only for CYC_QUERY process 
 params.gap = 500 // only for CYC_QUERY process 
 params.stepdown = 25 // only for CYC_QUERY process 
 params.gappercent = null // only for CYC_QUERY process
+params.cutoff = 1e6 // only for CYC_QUERY process
+
+
 
 log.info """\
     F I S H   N E X T F L O W
@@ -49,114 +53,232 @@ log.info """\
 """.stripIndent()
 
 process MKDIRS {
-    label "step 1: Create directories"
+    label "A1_Create_directories"
+
+
+    output:
+    val true
 
     script:
     """
-    prb makedirs
+    mkdir -p ${workflow.projectDir}/data/rois
+    mkdir -p ${workflow.projectDir}/data/ref
     """
 
 }
 
 process MV_ROIS {
-    label "step 1A: Move regions of interest"
+    label "B1_1_Move_ROIs"
+
+    //publishDir "${workflow.projectDir}", mode: 'copy'
+
+    input:
+    val ready
+
+    output:
+    val true
 
     script:
     """
-    cp ${params.rois} data/rois/all_regions.tsv
+    cd ${workflow.projectDir}
+    cp ${baseDir}/tests/main/all_regions.tsv data/rois/all_regions.tsv
     """
 }
 
 process GET_REFERENCE {
-    label "step 2: Get reference"
+    label "C2_Get_reference"
     //TODO! add the reference genome to the command
+
+    input:
+    val ready
+
+    output:
+    val true
+
+   
     script:
     """
-    prb get_reference ${params.genome}
+    cd ${workflow.projectDir}
+    prb get_GRC -split
     """
 }
 
 process GET_OLIGOS {
-    label "step 3: Get oligos"
+    label "D3_Get_oligos"
+
+    input:
+    val ready
+
+    output:
+    val true
+
+   
 
     script:
     """
+    cd ${workflow.projectDir}
     prb get_oligos ${params.nt} ${params.gcfilter}
     """
 }
 
 process NHUSH {
-    label "step 4: NHUSH"
+    label "E4_NHUSH"
+
+
+    input:
+    val ready
+
+    output:
+    val true
+
+   
 
     script:
     """
+    cd ${workflow.projectDir}
     if [ -n "${params.sublength}" ]; then
-        prb run_nhush -d ${params.nt} -L ${params.length} -l ${params.sublength} -m ${params.mismatch} -t ${params.threads} -i ${params.combsize} -y
+        prb run_nHUSH -d ${params.nt} -L ${params.length} -l ${params.sublength} -m ${params.mismatch} -t ${params.threads} -i ${params.combsize} -y
     else
-        prb run_nhush -d ${params.nt} -L ${params.length} -m ${params.mismatch} -t ${params.threads} -i ${params.combsize} -y
+        prb run_nHUSH -d ${params.nt} -L ${params.length} -m ${params.mismatch} -t ${params.threads} -i ${params.combsize} -y
     fi
     """
 }
 
 process REFORM_HUSH {
-    label "step 5: Reform HUSH"
+    label "F5_Reform_HUSH"
+
+    input:
+    val ready
+
+    output:
+    val true
+
+   
 
     script:
     """
+    cd ${workflow.projectDir}
     prb reform_hush_combined ${params.nt} ${params.length} ${params.sublength} ${params.mismatch}
     """
 }
 
 process MELT_SECS {
-    label "step 6: Melt secondary structures"
+    label "G6_melt_secondary_structures"
+
+    input:
+    val ready
+
+    output:
+    val true
+
+   
 
     script:
     """
+    cd ${workflow.projectDir}
     prb melt_secs_parallel ${params.nt} 
     """
 }
 
 process GENERATE_BLACKLIST {
-    label "step 7: Generate blacklist"
+    label "H7_Generate_blacklist"
+
+    input:
+    val ready
+
+    output:
+    val true
+
+   
 
     script:
     """
+    cd ${workflow.projectDir}
     prb generate_blacklist -L ${params.length} -c ${params.countRepeat}
     """
 }
 
 process BUILD_DATABASE {
-    label "step 8: Build database"
+    label "I8_Build_database"
+
+    input:
+    val ready
+
+    output:
+    val true
+
+   
 
     script:
     """
-    prb build-db_BL -f ${params.funcDB} -m ${params.matchConsec} -i ${params.maxConsecPolymer} -L ${length} -c ${countRepeat} -d ${params.distance} -T ${params.tempMelting} -y
+    cd ${workflow.projectDir}
+    prb build-db_BL -f ${params.funcDB} -m ${params.matchConsec} -i ${params.maxConsecPolymer} -L ${params.length} -c ${params.countRepeat} -d ${params.distance} -T ${params.tempMelting} -y
     """
 }
 
 process CYC_QUERY {
-    label "step 9: Cycling Query"
+    label "J9_Cycling_query"
+
+    input:
+    val ready
+
+    output:
+    val true
+
+   
 
     script:
     """
-    prb query_BL -s ${params.nt} -L ${params.length} -m ${placeholder} -c ${params.cutoff} -t ${params.threads} -g ${params.gap} ${params.greedy}
+    cd ${workflow.projectDir}
+    prb query_BL -s ${params.nt} -L ${params.length} -m ${params.cyc_mm} -c ${params.cutoff} -t ${params.threads} -g ${params.gap} ${params.greedy}
     """
 }
 
 process SUMMARY {
-    label "step 10: Summarize Probes"
+    label "H=K10_Summarize_probes_final"
+
+    input:
+    val ready
+
+    output:
+    val true
+
+   
 
     script:
     """
+    cd ${workflow.projectDir}
     prb summarize_probes_final
     """
 }
 
 process SUMMARY_VISUAL {
-    label "step 10: Summarize Probes Visual"
+    label "L11_Summarize_probes_visual"
+
+    input:
+    val ready
+
+    output:
+    val true
 
     script:
     """
+    cd ${workflow.projectDir}
     prb visual_report
     """
+}
+
+workflow  {
+    MKDIRS()
+    MV_ROIS(MKDIRS.out)
+    GET_REFERENCE(MV_ROIS.out)
+    GET_OLIGOS(GET_REFERENCE.out)
+    NHUSH(GET_OLIGOS.out)
+    REFORM_HUSH(NHUSH.out)
+    MELT_SECS(REFORM_HUSH.out)
+    GENERATE_BLACKLIST(MELT_SECS.out)
+    BUILD_DATABASE(GENERATE_BLACKLIST.out)
+    CYC_QUERY(BUILD_DATABASE.out)
+    SUMMARY(CYC_QUERY.out)
+    SUMMARY_VISUAL(SUMMARY.out)
 }
