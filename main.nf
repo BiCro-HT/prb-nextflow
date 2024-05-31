@@ -7,7 +7,7 @@ params.rois = "data/rois/all_regions.tsv" // path to the regions of interest fil
 params.nt = "DNA" // DNA or RNA
 params.gcfilter = 1 // 0 for no filter, 1 for filter
 params.length = 40 // length of the oligos MUST be the same with the "data/rois/all_regions.tsv"
-params.sublength = "" 
+params.sublength = 21 // length of the sub oligos 
 params.mismatch = 2 // number of mismatches
 params.threads = 40 // number of threads
 params.combsize = 14
@@ -100,6 +100,7 @@ process GET_REFERENCE {
     """
     cd ${workflow.projectDir}
     prb get_GRC -split
+
     """
 }
 
