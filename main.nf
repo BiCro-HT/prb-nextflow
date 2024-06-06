@@ -61,8 +61,8 @@ process MKDIRS {
 
     script:
     """
-    mkdir -p ${workflow.projectDir}/data/rois
-    mkdir -p ${workflow.projectDir}/data/ref
+    mkdir -p ${PWD}/data/rois
+    mkdir -p ${PWD}/data/ref
     """
 
 }
@@ -80,7 +80,7 @@ process MV_ROIS {
 
     script:
     """
-    cd ${workflow.projectDir}
+    cd ${PWD}
     cp ${baseDir}/tests/main/all_regions.tsv data/rois/all_regions.tsv
     """
 }
@@ -98,8 +98,9 @@ process GET_REFERENCE {
    
     script:
     """
-    cd ${workflow.projectDir}
-    prb get_GRC -split
+    cd ${PWD}
+    
+    # prb get_GRC -split -r latest
 
     """
 }
@@ -117,7 +118,7 @@ process GET_OLIGOS {
 
     script:
     """
-    cd ${workflow.projectDir}
+    cd ${PWD}
     prb get_oligos ${params.nt} ${params.gcfilter}
     """
 }
@@ -136,7 +137,7 @@ process NHUSH {
 
     script:
     """
-    cd ${workflow.projectDir}
+    cd ${PWD}
     if [ -n "${params.sublength}" ]; then
         prb run_nHUSH -d ${params.nt} -L ${params.length} -l ${params.sublength} -m ${params.mismatch} -t ${params.threads} -i ${params.combsize} -y
     else
@@ -158,7 +159,7 @@ process REFORM_HUSH {
 
     script:
     """
-    cd ${workflow.projectDir}
+    cd ${PWD}
     prb reform_hush_combined ${params.nt} ${params.length} ${params.sublength} ${params.mismatch}
     """
 }
@@ -176,7 +177,7 @@ process MELT_SECS {
 
     script:
     """
-    cd ${workflow.projectDir}
+    cd ${PWD}
     prb melt_secs_parallel ${params.nt} 
     """
 }
@@ -194,7 +195,7 @@ process GENERATE_BLACKLIST {
 
     script:
     """
-    cd ${workflow.projectDir}
+    cd ${PWD}
     prb generate_blacklist -L ${params.length} -c ${params.countRepeat}
     """
 }
@@ -212,7 +213,7 @@ process BUILD_DATABASE {
 
     script:
     """
-    cd ${workflow.projectDir}
+    cd ${PWD}
     prb build-db_BL -f ${params.funcDB} -m ${params.matchConsec} -i ${params.maxConsecPolymer} -L ${params.length} -c ${params.countRepeat} -d ${params.distance} -T ${params.tempMelting} -y
     """
 }
@@ -230,7 +231,7 @@ process CYC_QUERY {
 
     script:
     """
-    cd ${workflow.projectDir}
+    cd ${PWD}
     prb query_BL -s ${params.nt} -L ${params.length} -m ${params.cyc_mm} -c ${params.cutoff} -t ${params.threads} -g ${params.gap} ${params.greedy}
     """
 }
@@ -248,7 +249,7 @@ process SUMMARY {
 
     script:
     """
-    cd ${workflow.projectDir}
+    cd ${PWD}
     prb summarize_probes_final
     """
 }
@@ -264,7 +265,7 @@ process SUMMARY_VISUAL {
 
     script:
     """
-    cd ${workflow.projectDir}
+    cd ${PWD}
     prb visual_report
     """
 }
